@@ -21,14 +21,12 @@ y = dataset.iloc[:, 3].values
 # Taking Care of missing data
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import Imputer
-
 imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
 imputer.fit(X[:, 1:3])
 X[:, 1:3] = imputer.transform(X[:, 1:3])
 
 # Encoding categorical data
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-
 labelencoder_x = LabelEncoder()
 X[:, 0] = labelencoder_x.fit_transform(X[:, 0])
 onehotencoder = OneHotEncoder(categorical_features=[0])
@@ -40,7 +38,6 @@ y = labelencoder_y.fit_transform(y)
 
 # Splitting dataset into training and test data
 from sklearn.model_selection import train_test_split
-
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
 # Feature Scaling
