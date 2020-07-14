@@ -16,7 +16,7 @@ import pandas as pd
 # Importing the dataset
 dataset = pd.read_csv('FILE')
 X = dataset.iloc[:, :-1].values
-y = dataset.iloc[:, 3].values
+y = dataset.iloc[:, -1].values
 
 # Taking Care of missing data
 from sklearn.impute import SimpleImputer
@@ -40,7 +40,7 @@ y = labelencoder_y.fit_transform(y)
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
-# Feature Scaling
+# Feature Scaling, after splitting the train and test to prevent information leakage between them
 """from sklearn.preprocessing import StandardScaler
 sc_X = StandardScaler()
 X_train = sc_X.fit_transform(X_train)
