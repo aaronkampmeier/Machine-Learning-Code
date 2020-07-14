@@ -14,10 +14,10 @@ output_size = 1
 learning_rate = 0.05
 
 X = np.array([
-	[0,1, 0.5],
-	[0,1, 0.5],
-	[1,0, -0.5],
-	[1,0, -0.5]
+	[0, 1, 0.5],
+	[0, 1, 0.5],
+	[1, 0, -0.5],
+	[1, 0, -0.5]
 ])
 
 Y = np.array([
@@ -54,33 +54,10 @@ def forward_propagate(input):
 	return layer_outputs
 
 
-layer_outputs = forward_propagate(X)
-Y_pred = layer_outputs[-1]
-
-# Calculate the cost
-cost = 0.5 * np.power(Y - Y_pred, 2)
-# Sum all costs for a single output neuron together
-cost = np.sum(cost, axis=0)
-# cost = np.sum(cost, axis=1)
-
-# Calculate changes for output layer
-# cost_partial_for_output_neurons = -1 * (Y - Y_pred)
-# modded_a = layer_outputs[-1] * (1 - layer_outputs[-1]) * cost_partial_for_output_neurons
-# cost_partial_for_output_weights = np.dot(layer_outputs[-2].T, modded_a)
-
-# Now that we have how much each output weight affected the error, we can change the synapses by that value
-# multiplied by the learning rate
-# layers[-1] -= learning_rate * cost_partial_for_output_weights
-
-
-# Generalize it for all layers
-# Store all of the partial derivatives of cost with respect to the output of a neuron for every layer
-
-
 # Returns an array of the cost partials for all layers from layer_i and beyond
 # layer_i is positive indexed starting at 0 and going up to the len(layers)
 def cost_partials_for_neuron_layer(layer_i):
-	if (layer_i == len(layers) - 1):
+	if layer_i == len(layers) - 1:
 		# The output layer
 		return [-1 * (Y - Y_pred)]
 	else:
@@ -92,22 +69,41 @@ def cost_partials_for_neuron_layer(layer_i):
 		return previous_partials
 
 
-cost_partial_for_neurons = cost_partials_for_neuron_layer(0)
-cost_partial_for_weights = []
+for training_iter in range(10000):
+	layer_outputs = forward_propagate(X)
+	Y_pred = layer_outputs[-1]
 
-# Go through all layers, calculate how much the synapses (weights) contributed to the error.
-for layer_i in range(0, len(layers)):
-	# Generate partials
-	# layer_i is the index of the layer and the outputs from a layer are at index layer_i + 1 in layer_outputs
-	modded_a = layer_outputs[layer_i + 1] * (1 - layer_outputs[layer_i + 1]) * cost_partial_for_neurons[layer_i]
-	cost_partial_for_weights.append(np.dot(layer_outputs[layer_i].T, modded_a))
+	# Calculate the cost
+	cost = 0.5 * np.power(Y - Y_pred, 2)
+	# Sum all costs for a single output neuron together
+	cost = np.sum(cost, axis=0)
+	if training_iter % 1000 == 0:
+		print("Cost at " + str(training_iter) + " is " + str(cost))
+	# cost = np.sum(cost, axis=1)
 
-	# Update the weights
-	layers[layer_i] -= learning_rate * cost_partial_for_weights[layer_i]
+	# Generalize it for all layers
+	# Store all of the partial derivatives of cost with respect to the output of a neuron for every layer
+
+	cost_partial_for_neurons = cost_partials_for_neuron_layer(0)
+	cost_partial_for_weights = []
+
+	# Go through all layers, calculate how much the synapses (weights) contributed to the error.
+	for layer_i in range(0, len(layers)):
+		# Generate partials
+		# layer_i is the index of the layer and the outputs from a layer are at index layer_i + 1 in layer_outputs
+		modded_a = layer_outputs[layer_i + 1] * (1 - layer_outputs[layer_i + 1]) * cost_partial_for_neurons[layer_i]
+		cost_partial_for_weights.append(np.dot(layer_outputs[layer_i].T, modded_a))
+
+		# Update the weights
+		layers[layer_i] -= learning_rate * cost_partial_for_weights[layer_i]
+
+	# cost_partial_for_weights now contains the (partial E) / (partial w_(i,j)) for all neurons i in a layer
+	# and their input neuron j a layer above
+	# Neurons i go across by column, input neurons i are listed down the rows
+	# The (partial E) / (partial w_(i,j)) is at location (j,i)
 
 
-# cost_partial_for_weights now contains the (partial E) / (partial w_(i,j)) for all neurons i in a layer
-# and their input neuron j a layer above
-# Neurons i go across by column, input neurons i are listed down the rows
-# The (partial E) / (partial w_(i,j)) is at location (j,i)
+print("Cost at end: " + str(cost))
+
+print("Pred output: \n" + str(forward_propagate(X)[-1]))
 
