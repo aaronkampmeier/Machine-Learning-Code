@@ -40,5 +40,6 @@ for iter in range(10000):
 	# update weights
 	synapse_0 -= synapse_0_derivative
 
+print("End cost: " + str(layer_1_error))
 print("Output After Training:")
 print(layer_1)

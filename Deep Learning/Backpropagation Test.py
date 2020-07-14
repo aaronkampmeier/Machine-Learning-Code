@@ -1,17 +1,19 @@
 # Tests backprop with a variable number of layers
 
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 
 def sigmoid(x):
 	return 1 / (1 + np.exp(-x))
 
 
-num_of_hidden_layers = 2
-hidden_neurons_in_layer = 3
 input_size = 3
-output_size = 1
-learning_rate = 0.05
+output_size = 2
+num_of_hidden_layers = 0
+hidden_neurons_in_layer = 3
+learning_rate = .1
+epochs = 10000
 
 X = np.array([
 	[0, 1, 0.5],
@@ -20,12 +22,25 @@ X = np.array([
 	[1, 0, -0.5]
 ])
 
+# Y = np.array([
+# 	[0.7, 0],
+# 	[0.7, 0],
+# 	[0, 0.7],
+# 	[0, 0.7]
+# ])
+
 Y = np.array([
-	[1],
-	[1],
-	[0],
-	[0]
+	[2, -1],
+	[2, -1],
+	[1, 2],
+	[1, 2]
 ])
+
+# Scale my data
+scaler_X = MinMaxScaler(feature_range=(-1, 1))
+scaler_Y = MinMaxScaler(feature_range=(0, 1))
+X_scaled = scaler_X.fit_transform(X)
+Y_scaled = scaler_Y.fit_transform(Y)
 
 # All nd arrays are indexed with height by width. Coordinate first specifies row and then column
 # Holds an array of all the layers, a layer is defined by a synapse matrix of size (prev layer output size) x (number
@@ -59,22 +74,23 @@ def forward_propagate(input):
 def cost_partials_for_neuron_layer(layer_i):
 	if layer_i == len(layers) - 1:
 		# The output layer
-		return [-1 * (Y - Y_pred)]
+		return [-1 * (Y_scaled - Y_pred)]
 	else:
 		previous_partials = cost_partials_for_neuron_layer(layer_i + 1)
-		modded_ak = layer_outputs[layer_i + 1] * (1 - layer_outputs[layer_i + 1]) * previous_partials[0]
-		cost_partial_for_layer_neurons = np.dot(layers[layer_i], modded_ak.T).T
+		modded_ak = layer_outputs[layer_i + 2] * (1 - layer_outputs[layer_i + 2]) * previous_partials[0]
+		cost_partial_for_layer_neurons = np.dot(layers[layer_i + 1], modded_ak.T).T
 		# cost_partial_for_layer_neurons = np.sum(cost_partial_for_layer_neurons, axis=1)
 		previous_partials.insert(0, cost_partial_for_layer_neurons)
 		return previous_partials
 
 
-for training_iter in range(10000):
-	layer_outputs = forward_propagate(X)
+# Train it!
+for training_iter in range(epochs):
+	layer_outputs = forward_propagate(X_scaled)
 	Y_pred = layer_outputs[-1]
 
 	# Calculate the cost
-	cost = 0.5 * np.power(Y - Y_pred, 2)
+	cost = 0.5 * np.power(Y_scaled - Y_pred, 2)
 	# Sum all costs for a single output neuron together
 	cost = np.sum(cost, axis=0)
 	if training_iter % 1000 == 0:
@@ -105,5 +121,6 @@ for training_iter in range(10000):
 
 print("Cost at end: " + str(cost))
 
-print("Pred output: \n" + str(forward_propagate(X)[-1]))
+Y_pred = scaler_Y.inverse_transform(forward_propagate(X_scaled)[-1])
+print("Pred output: \n" + str(Y_pred))
 
